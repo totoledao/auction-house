@@ -1,0 +1,7 @@
+package api
+
+import "net/http"
+
+func (api *Api) HandleSignUpUser(w http.ResponseWriter, r *http.Request) {}
+func (api *Api) handleLoginUser(w http.ResponseWriter, r *http.Request)  {}
+func (api *Api) handleLogoutUser(w http.ResponseWriter, r *http.Request) {}
