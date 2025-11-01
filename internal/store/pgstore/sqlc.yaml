@@ -1,4 +1,4 @@
-version: 2
+version: "2"
 
 sql:
   - engine: "postgresql"
@@ -15,3 +15,15 @@ sql:
             go_type:
               import: "github.com/google/uuid"
               type: "UUID"
+          - db_type: "timestamptz"
+            go_type:
+              import: "time"
+              type: "Time"
+          - db_type: "numeric"
+            go_type:
+              import: "github.com/shopspring/decimal"
+              type: "Decimal"
+          - db_type: "pg_catalog.numeric"
+            go_type:
+              import: "github.com/shopspring/decimal"
+              type: "Decimal"

@@ -3,6 +3,7 @@ package jsonutils
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/totoledao/auction-house/internal/validator"
@@ -14,6 +15,7 @@ func EncodeJson[T any](w http.ResponseWriter, r *http.Request, statusCode int, d
 
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
+		log.Printf("\nERROR EncodeJson failed: %v\n", err)
 		return err
 	}
 
@@ -25,6 +27,7 @@ func DecodeValidJson[T validator.Validator](r *http.Request) (T, map[string]stri
 
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
+		log.Printf("\nERROR DecodeValidJson failed: %v\n", err)
 		return data, nil, err
 	}
 
@@ -40,6 +43,7 @@ func DecodeJson[T any](r *http.Request) (T, error) {
 	var data T
 
 	err := json.NewDecoder(r.Body).Decode(&data)
+	log.Printf("\nERROR DecodeJson failed: %v\n", err)
 	if err != nil {
 		return data, err
 	}
