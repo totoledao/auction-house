@@ -11,6 +11,14 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type Bid struct {
+	ID        uuid.UUID       `json:"id"`
+	ProductID uuid.UUID       `json:"product_id"`
+	BidderID  uuid.UUID       `json:"bidder_id"`
+	BidAmount decimal.Decimal `json:"bid_amount"`
+	CreatedAt time.Time       `json:"created_at"`
+}
+
 type Product struct {
 	ID          uuid.UUID       `json:"id"`
 	SellerID    uuid.UUID       `json:"seller_id"`
