@@ -32,6 +32,7 @@ func (api *Api) Routes() {
 					r.Use(api.AuthMiddleware)
 
 					r.Post("/", api.HandleCreateProduct)
+					r.Get("/ws/subscribe/{product_id}", api.HandleSubscribeUserToAuction)
 				})
 			})
 		})

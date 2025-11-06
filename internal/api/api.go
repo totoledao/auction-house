@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/websocket"
 	"github.com/totoledao/auction-house/internal/services"
 )
 
@@ -11,4 +12,6 @@ type Api struct {
 	Sessions       *scs.SessionManager
 	UserService    services.UserService
 	ProductService services.ProductService
+	WsUpgrader     websocket.Upgrader
+	AuctionLobby   services.AuctionLobby
 }

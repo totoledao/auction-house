@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shopspring/decimal"
 	"github.com/totoledao/auction-house/internal/store/pgstore"
@@ -40,9 +42,25 @@ func (ps *ProductService) CreateProduct(
 			AuctionEnd:  auction_end,
 		},
 	)
-
 	if err != nil {
 		return uuid.UUID{}, err
 	}
 	return id, nil
+}
+
+func (ps *ProductService) GetProductById(
+	ctx context.Context,
+	product_id uuid.UUID,
+) (pgstore.Product, error) {
+	data, err := ps.queries.GetProductById(
+		ctx,
+		product_id,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return pgstore.Product{}, errors.New("product not found")
+		}
+		return pgstore.Product{}, err
+	}
+	return data, nil
 }
