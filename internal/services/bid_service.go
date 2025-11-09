@@ -23,6 +23,16 @@ func NewBidService(pool *pgxpool.Pool) BidService {
 	}
 }
 
+type errBid struct {
+	MinValue  error
+	PrevValue error
+}
+
+var BidErrors = errBid{
+	MinValue:  errors.New("the bid value should be higher than the minimum value"),
+	PrevValue: errors.New("the bid should be higher than the previous bid"),
+}
+
 func (ps *BidService) PlaceBid(
 	ctx context.Context,
 	bidder_id uuid.UUID,
@@ -39,7 +49,7 @@ func (ps *BidService) PlaceBid(
 		}
 	}
 	if product.BasePrice.GreaterThanOrEqual(bid_amount) {
-		return pgstore.Bid{}, errors.New("the bid value should be higher than the minimum value")
+		return pgstore.Bid{}, BidErrors.MinValue
 	}
 
 	highestBid, err := ps.queries.GetHighestBidByProductId(
@@ -52,7 +62,7 @@ func (ps *BidService) PlaceBid(
 		}
 	}
 	if highestBid.BidAmount.GreaterThanOrEqual(bid_amount) {
-		return pgstore.Bid{}, errors.New("the bid should be higher than the previous bid")
+		return pgstore.Bid{}, BidErrors.PrevValue
 	}
 
 	data, err := ps.queries.CreateBid(

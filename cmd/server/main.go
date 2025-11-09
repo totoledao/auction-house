@@ -58,6 +58,7 @@ func main() {
 		Sessions:       s,
 		UserService:    services.NewUserService(pool),
 		ProductService: services.NewProductService(pool),
+		BidService:     services.NewBidService(pool),
 		WsUpgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				// DEV

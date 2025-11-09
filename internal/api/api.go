@@ -12,6 +12,7 @@ type Api struct {
 	Sessions       *scs.SessionManager
 	UserService    services.UserService
 	ProductService services.ProductService
+	BidService     services.BidService
 	WsUpgrader     websocket.Upgrader
 	AuctionLobby   services.AuctionLobby
 }
