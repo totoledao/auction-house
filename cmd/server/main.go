@@ -72,14 +72,6 @@ func main() {
 
 	api.Routes()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hi"))
-	})
-
-	http.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Subroute"))
-	})
-
 	host := ":8080"
 	fmt.Printf("Server running at http://localhost%s/ 🌐", host)
 	err = http.ListenAndServe(host, api.Router)
