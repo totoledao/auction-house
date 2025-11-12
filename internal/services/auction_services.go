@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -26,13 +27,14 @@ const (
 
 	// Error
 	FailedToPlaceBid
+	InvalidJSON
 )
 
 type Message struct {
-	Message string
-	Amount  decimal.Decimal
-	Kind    MessageKind
-	UserId  uuid.UUID
+	Message string          `json:"message,omitempty"`
+	Amount  decimal.Decimal `json:"amount"`
+	Kind    MessageKind     `json:"kind"`
+	UserId  uuid.UUID       `json:"user_id,omitempty"`
 }
 
 type AuctionLobby struct {
@@ -62,23 +64,31 @@ func (r *AuctionRoom) broadcastMessage(m Message) {
 		if err != nil {
 			if errors.Is(err, BidErrors.MinValue) || errors.Is(err, BidErrors.PrevValue) {
 				if ok {
-					client.Send <- Message{Message: err.Error(), Kind: FailedToPlaceBid}
+					client.Send <- Message{Message: err.Error(), Kind: FailedToPlaceBid, UserId: m.UserId}
 				}
 				return
 			}
 		}
 
 		if ok {
-			client.Send <- Message{Message: "Your bid was successfully placed", Kind: SucceededToPlaceBid}
+			client.Send <- Message{Message: "Your bid was successfully placed", Kind: SucceededToPlaceBid, UserId: m.UserId}
 		}
 
 		for id, client := range r.Clients {
-			newMessage := Message{Message: "A new bid was placed", Kind: NewBidPlaced, Amount: bid.BidAmount}
+			newMessage := Message{Message: "A new bid was placed", Kind: NewBidPlaced, Amount: bid.BidAmount, UserId: m.UserId}
 
 			if id != m.UserId {
 				client.Send <- newMessage
 			}
 		}
+
+	case InvalidJSON:
+		client, ok := r.Clients[m.UserId]
+		if !ok {
+			slog.Info("Client not found in hashmap", "userId", m.UserId)
+			return
+		}
+		client.Send <- m
 	}
 
 }
@@ -148,5 +158,89 @@ func NewClient(
 		Conn:   conn,
 		Send:   make(chan Message, 512),
 		UserId: userId,
+	}
+}
+
+const (
+	maxMessageSize = 512                     // 512 bytes
+	readDeadline   = 60 * time.Second        // 60 seconds
+	pingPeriod     = (readDeadline * 9) / 10 // 90% of readDeadline
+	writeWait      = 10 * time.Second        // 10 seconds
+)
+
+func (c *Client) ReadEventLoop() {
+	defer func() {
+		c.Room.Unregister <- c
+		c.Conn.Close()
+	}()
+
+	c.Conn.SetReadLimit(maxMessageSize)
+	c.Conn.SetReadDeadline(time.Now().Add(readDeadline))
+	c.Conn.SetPongHandler(func(appData string) error {
+		c.Conn.SetReadDeadline(time.Now().Add(readDeadline))
+		return nil
+	})
+
+	for {
+		var m Message
+		m.UserId = *c.UserId
+
+		err := c.Conn.ReadJSON(&m)
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				slog.Error("Unexpected ws close error", "error", err)
+			}
+
+			c.Room.Broadcast <- Message{
+				Kind:    InvalidJSON,
+				Message: "This message should be a valid JSON",
+				UserId:  m.UserId,
+			}
+			continue
+		}
+
+		c.Room.Broadcast <- m
+	}
+}
+
+func (c *Client) WriteEventLoop() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.Conn.Close()
+	}()
+
+	for {
+		select {
+		case message, ok := <-c.Send:
+			if !ok {
+				c.Conn.WriteJSON(Message{
+					Message: "closing ws connection",
+					Kind:    websocket.CloseMessage,
+				})
+				return
+			}
+
+			if message.Kind == AuctionFinished {
+				close(c.Send)
+				return
+			}
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+
+			err := c.Conn.WriteJSON(message)
+			if err != nil {
+				c.Room.Unregister <- c
+				return
+			}
+
+		case <-ticker.C:
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+
+			err := c.Conn.WriteMessage(websocket.PingMessage, nil)
+			if err != nil {
+				slog.Error("Unexpected write error", "error", err)
+				return
+			}
+		}
 	}
 }

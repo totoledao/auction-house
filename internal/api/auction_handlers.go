@@ -63,8 +63,8 @@ func (api *Api) HandleSubscribeUserToAuction(w http.ResponseWriter, r *http.Requ
 	client := services.NewClient(room, conn, &userId)
 
 	room.Register <- client
-	// go client.ReadEventLoop()
-	// go client.WriteEventLoop()
+	go client.ReadEventLoop()
+	go client.WriteEventLoop()
 
 	//Keep hanging to test upgrade
 	for {
