@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/totoledao/auction-house/internal/jsonutils"
+	"github.com/totoledao/auction-house/internal/services"
 )
 
 func (api *Api) HandleSubscribeUserToAuction(w http.ResponseWriter, r *http.Request) {
@@ -41,11 +42,31 @@ func (api *Api) HandleSubscribeUserToAuction(w http.ResponseWriter, r *http.Requ
 		})
 	}
 
+	api.AuctionLobby.Lock()
+	room, ok := api.AuctionLobby.Rooms[productId]
+	if !ok {
+		jsonutils.EncodeJson(w, r, http.StatusBadRequest, map[string]any{
+			"message": "the auction has been finished",
+		})
+		return
+	}
+	api.AuctionLobby.Unlock()
+
 	conn, err := api.WsUpgrader.Upgrade(w, r, nil)
 	defer conn.Close()
 	if err != nil {
 		jsonutils.EncodeJson(w, r, http.StatusInternalServerError, map[string]any{
 			"message": "could not upgrade connection to a websocket protocol, try again",
 		})
+	}
+
+	client := services.NewClient(room, conn, &userId)
+
+	room.Register <- client
+	// go client.ReadEventLoop()
+	// go client.WriteEventLoop()
+
+	//Keep hanging to test upgrade
+	for {
 	}
 }
