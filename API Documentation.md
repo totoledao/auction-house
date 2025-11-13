@@ -331,14 +331,21 @@ Real-time bidding updates for a specific product. Send messages to place bids an
    Headers: X-CSRF-Token
    ```
 
-4. **Create Product** (authenticated)
+4. **Create Product**
 
    ```
    POST /v1/products
    Headers: X-CSRF-Token, Cookie: session
    ```
 
-5. **Logout** (when done)
+5. **Subscribe to Product**
+
+   ```
+   WS /v1/products/ws/subscribe/{{product_id}}
+   Headers: X-CSRF-Token, Cookie: session
+   ```
+
+6. **Logout**
    ```
    POST /v1/users/logout
    Headers: X-CSRF-Token, Cookie: session
