@@ -64,3 +64,16 @@ func (ps *ProductService) GetProductById(
 	}
 	return data, nil
 }
+
+func (ps *ProductService) GetProductsNotSold(ctx context.Context) ([]pgstore.GetProductsNotSoldRow, error) {
+	products, err := ps.queries.GetProductsNotSold(
+		ctx,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return []pgstore.GetProductsNotSoldRow{}, errors.New("no auctions open")
+		}
+		return []pgstore.GetProductsNotSoldRow{}, err
+	}
+	return products, nil
+}

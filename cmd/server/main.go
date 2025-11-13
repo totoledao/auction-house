@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"encoding/gob"
+	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/totoledao/auction-house/internal/api"
@@ -71,6 +74,19 @@ func main() {
 	}
 
 	api.Routes()
+
+	// Restore rooms for products not sold
+	products, err := api.ProductService.GetProductsNotSold(ctx)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			slog.Info("No pending auctions to be restarted")
+		}
+		slog.Error("Error checking for products not sold", "error", err)
+	}
+
+	for _, product := range products {
+		api.AuctionLobby.AssignProductToRoom(product.ID, product.AuctionEnd, api.BidService)
+	}
 
 	host := ":8080"
 	fmt.Printf("Server running at http://localhost%s/ 🌐", host)

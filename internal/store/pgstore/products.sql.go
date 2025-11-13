@@ -62,3 +62,33 @@ func (q *Queries) GetProductById(ctx context.Context, id uuid.UUID) (Product, er
 	)
 	return i, err
 }
+
+const getProductsNotSold = `-- name: GetProductsNotSold :many
+ Select id, auction_end FROM products
+ WHERE is_sold = false
+`
+
+type GetProductsNotSoldRow struct {
+	ID         uuid.UUID `json:"id"`
+	AuctionEnd time.Time `json:"auction_end"`
+}
+
+func (q *Queries) GetProductsNotSold(ctx context.Context) ([]GetProductsNotSoldRow, error) {
+	rows, err := q.db.Query(ctx, getProductsNotSold)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetProductsNotSoldRow
+	for rows.Next() {
+		var i GetProductsNotSoldRow
+		if err := rows.Scan(&i.ID, &i.AuctionEnd); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
