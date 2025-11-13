@@ -57,7 +57,7 @@ func (ps *BidService) PlaceBid(
 		product_id,
 	)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if !errors.Is(err, pgx.ErrNoRows) {
 			return pgstore.Bid{}, err
 		}
 	}

@@ -57,17 +57,24 @@ func (r *AuctionRoom) broadcastMessage(m Message) {
 	slog.Info("New message received", "Message", m.Message, "RoomID", r.Id.String(), "UserID", m.UserId.String())
 	switch m.Kind {
 	case PlaceBid:
-		bid, err := r.BidService.PlaceBid(r.Context, r.Id, m.UserId, m.Amount)
+		bid, err := r.BidService.PlaceBid(r.Context, m.UserId, r.Id, m.Amount)
 
 		client, ok := r.Clients[m.UserId]
 
 		if err != nil {
+			slog.Error("Error placing bid", "err", err)
+
 			if errors.Is(err, BidErrors.MinValue) || errors.Is(err, BidErrors.PrevValue) {
 				if ok {
 					client.Send <- Message{Message: err.Error(), Kind: FailedToPlaceBid, UserId: m.UserId}
 				}
 				return
 			}
+
+			if ok {
+				client.Send <- Message{Message: "Something went wrong, try again", Kind: FailedToPlaceBid, UserId: m.UserId}
+			}
+			return
 		}
 
 		if ok {
