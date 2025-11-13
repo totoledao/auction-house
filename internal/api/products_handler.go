@@ -1,12 +1,10 @@
 package api
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/totoledao/auction-house/internal/jsonutils"
-	"github.com/totoledao/auction-house/internal/services"
 	"github.com/totoledao/auction-house/internal/useCase/product"
 )
 
@@ -41,16 +39,7 @@ func (api *Api) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, _ := context.WithDeadline(context.Background(), data.AuctionEnd)
-
-	auctionRoom := services.NewAuctionRoom(ctx, productId, api.BidService)
-
-	go auctionRoom.Run()
-
-	api.AuctionLobby.Lock()
-	api.AuctionLobby.Rooms[productId] = auctionRoom
-	api.AuctionLobby.Unlock()
-
+	api.AuctionLobby.AssignProductToRoom(productId, data.AuctionEnd, api.BidService)
 	jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{
 		"message":    "Product auction started",
 		"product_id": productId,

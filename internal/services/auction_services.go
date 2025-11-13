@@ -42,6 +42,18 @@ type AuctionLobby struct {
 	Rooms map[uuid.UUID]*AuctionRoom
 }
 
+func (l *AuctionLobby) AssignProductToRoom(id uuid.UUID, auctionEnd time.Time, BidService BidService) {
+	ctx, _ := context.WithDeadline(context.Background(), auctionEnd)
+
+	auctionRoom := newAuctionRoom(ctx, id, BidService)
+
+	go auctionRoom.Run()
+
+	l.Lock()
+	l.Rooms[id] = auctionRoom
+	l.Unlock()
+}
+
 type AuctionRoom struct {
 	Id         uuid.UUID
 	Context    context.Context
@@ -136,7 +148,7 @@ func (r *AuctionRoom) Run() {
 	}
 }
 
-func NewAuctionRoom(ctx context.Context, id uuid.UUID, BidService BidService) *AuctionRoom {
+func newAuctionRoom(ctx context.Context, id uuid.UUID, BidService BidService) *AuctionRoom {
 	return &AuctionRoom{
 		Id:         id,
 		Context:    ctx,
