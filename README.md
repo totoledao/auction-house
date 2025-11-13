@@ -1,5 +1,5 @@
 ![Size](https://img.shields.io/github/repo-size/totoledao/auction-house)
-![Platform](https://img.shields.io/badge/platform-web-7F00FF)
+![Platform](https://img.shields.io/badge/platform-server-7F00FF)
 
 [![GO][go-shield]][go-url]
 
@@ -42,7 +42,7 @@
 
 ## About The Project
 
-Real-time auctioning house back-end service that enables users to list products, create auctions, place bids, and participate in live bidding events with real-time updates.
+Minimal implementation of a real-time auctioning house back-end service that enables users to list products, create auctions, place bids, and participate in live bidding events with real-time updates.
 
 The main goal in developing this was to improve my proficiency in creating back-end services that implements real-time communication patterns, concurrent programming and authentication security features like CSRF protection and session management.
 
@@ -59,6 +59,8 @@ The main goal in developing this was to improve my proficiency in creating back-
 - Session Management - [scs, pgxstore](https://github.com/alexedwards/scs)<br>
 - Migrations - [tern](https://github.com/jackc/tern)<br>
 - CSRF protection - [gorilla/csrf](https://github.com/gorilla/csrf)
+- Websockets - [gorilla/websocket](https://github.com/gorilla/websocket)
+- Accurate float handling - [shopspring/decimal](https://github.com/shopspring/decimal)
 
 <!-- ### Features -->
 
