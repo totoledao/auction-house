@@ -29,7 +29,6 @@ func (api *Api) HandleSignUpUser(w http.ResponseWriter, r *http.Request) {
 	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{
 		"user_id": id,
 	})
-	return
 }
 
 func (api *Api) handleLoginUser(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +65,6 @@ func (api *Api) handleLoginUser(w http.ResponseWriter, r *http.Request) {
 	_ = jsonutils.EncodeJson(w, r, http.StatusOK, map[string]any{
 		"message": "logged in successfully",
 	})
-	return
 }
 
 func (api *Api) handleLogoutUser(w http.ResponseWriter, r *http.Request) {
@@ -82,5 +80,4 @@ func (api *Api) handleLogoutUser(w http.ResponseWriter, r *http.Request) {
 	_ = jsonutils.EncodeJson(w, r, http.StatusOK, map[string]any{
 		"message": "logged out successfully",
 	})
-	return
 }

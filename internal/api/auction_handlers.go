@@ -53,12 +53,12 @@ func (api *Api) HandleSubscribeUserToAuction(w http.ResponseWriter, r *http.Requ
 	api.AuctionLobby.Unlock()
 
 	conn, err := api.WsUpgrader.Upgrade(w, r, nil)
-	defer conn.Close()
 	if err != nil {
 		jsonutils.EncodeJson(w, r, http.StatusInternalServerError, map[string]any{
 			"message": "could not upgrade connection to a websocket protocol, try again",
 		})
 	}
+	defer conn.Close()
 
 	client := services.NewClient(room, conn, &userId)
 
