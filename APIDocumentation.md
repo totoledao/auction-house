@@ -211,10 +211,10 @@ Real-time bidding updates for a specific product. Send messages to place bids an
 
 **Message Kind:**
 
-- Request: PlaceBid = 0
-- Ok/Success: SucceededToPlaceBid = 1
-- Info: NewBidPlaced = 2, AuctionFinished = 3
-- Error: FailedToPlaceBid = 4, InvalidJSON = 5
+- Place bid: 0
+- Place bid Success: 1
+- Info: 2, 3
+- Error: 4, 5
 
 **Message Format:**
 
