@@ -38,6 +38,8 @@
   </ol>
 </details>
 
+[API documentation](APIDocumentation.md)
+
 <!-- ABOUT THE PROJECT -->
 
 ## About The Project
