@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"sync"
@@ -201,22 +202,27 @@ func (c *Client) ReadEventLoop() {
 	})
 
 	for {
-		var m Message
-		m.UserId = *c.UserId
+		_, data, err := c.Conn.ReadMessage()
 
-		err := c.Conn.ReadJSON(&m)
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure) {
 				slog.Error("Unexpected ws close error", "error", err)
 			}
+			return
+		}
 
+		var m Message
+		err = json.Unmarshal(data, &m)
+		if err != nil {
 			c.Room.Broadcast <- Message{
 				Kind:    InvalidJSON,
-				Message: "This message should be a valid JSON",
-				UserId:  m.UserId,
+				Message: "This message should be valid JSON",
+				UserId:  *c.UserId,
 			}
 			continue
 		}
+
+		m.UserId = *c.UserId
 
 		c.Room.Broadcast <- m
 	}
